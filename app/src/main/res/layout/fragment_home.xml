@@ -136,8 +136,8 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/graphContainer"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
         android:layout_marginTop="10dp"
         >
 
@@ -165,9 +165,9 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="10%"
+                android:text="0"
                 android:id="@+id/displayfood"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textAlignment="center"
                 android:textColor="?attr/colorOnPrimary"
                 tools:ignore="RtlCompat" />
@@ -198,7 +198,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="27%"
+                android:text="0"
                 android:id="@+id/displayres"
                 android:textSize="12sp"
                 android:textAlignment="center"
@@ -231,7 +231,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="63%"
+                android:text="0"
                 android:id="@+id/displayrec"
                 android:textSize="12sp"
                 android:textAlignment="center"

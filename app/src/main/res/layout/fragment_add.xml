@@ -42,6 +42,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/location"
                 android:text="@string/locationText"
                 android:textColor="?attr/colorOnSecondary"
                 android:textSize="15sp"
@@ -73,6 +74,7 @@
             <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/building"
                     android:text="Building"
                     android:textColor="?attr/colorOnSecondary"
                     android:textSize="15sp"
@@ -168,6 +170,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/amount"
                 android:text="@string/amountText"
                 android:textColor="?attr/colorOnSecondary"
                 android:textSize="15sp"

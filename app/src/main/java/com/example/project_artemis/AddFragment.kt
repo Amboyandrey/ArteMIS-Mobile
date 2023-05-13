@@ -45,11 +45,11 @@ class AddFragment : Fragment() {
             }
 
             override fun onResponse(call: Call, response: Response) {
+                val responseString = response.body?.string()
+                val jsonArray = JSONArray(responseString)
+                val jsonObject = jsonArray.getJSONObject(0)
+                this@AddFragment.id = jsonObject.getString("id")
                 if (isAdded) {
-                    val responseString = response.body?.string()
-                    val jsonArray = JSONArray(responseString)
-                    val jsonObject = jsonArray.getJSONObject(0)
-                    this@AddFragment.id = jsonObject.getString("id")
                     requireActivity().runOnUiThread {
                         Toast.makeText(requireContext(), "Retrieved id: $id", Toast.LENGTH_SHORT).show()
                     }
@@ -85,7 +85,7 @@ class AddFragment : Fragment() {
 
                     val selectedLoc = parent?.getItemAtPosition(position).toString()
 
-                    val selectedBuilding = parent?.getItemAtPosition(position).toString()
+                    val selectedBuilding = binding.buildingPickerInput.selectedItem.toString()
 
                     val buildingSelectorAlangilan = listOf(
                         "CEAFA Building",
@@ -233,7 +233,7 @@ class AddFragment : Fragment() {
 
                                         binding.inputButton.setOnClickListener {
 
-                                            val wastetype = "residual"
+                                            // val wastetype = "residual"
                                             val building = building_name
                                             val campus = campus_name
                                             val totalWeight = 0
@@ -247,25 +247,35 @@ class AddFragment : Fragment() {
 
                                             showLoading()
 
+                                            if (isAdded) {
+                                                requireActivity().runOnUiThread {
+                                                    binding.location.text = campus
+                                                    binding.building.text = building
+                                                    binding.amount.text = weight.toString()
+                                                }
+                                            }
+
                                             val client = OkHttpClient()
                                             val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
+                                            val mediaType = "application/json".toMediaType()
 
                                             val jsonBody = """
+                                                [
                                                     {
                                                         "$building": {
                                                             "campus": "$campus",
                                                             "weight": {
-                                                                "$wastetype": $weight,
+                                                                "residual": $weight,
                                                                 "total": $totalWeight
                                                             }
                                                         }
                                                     }
-                                                """.trimIndent()
+                                                ]""".trimIndent()
 
-                                            val mediaType = "application/json".toMediaType()
                                             val request = Request.Builder()
                                                 .url(url)
                                                 .patch(jsonBody.toRequestBody(mediaType))
+                                                .addHeader("Content-Type", "application/json")
                                                 .build()
 
                                             // Send the request and handle the response
@@ -345,8 +355,10 @@ class AddFragment : Fragment() {
 
                                             val client = OkHttpClient()
                                             val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
+                                            val mediaType = "application/json".toMediaType()
 
                                             val jsonBody = """
+                                                [
                                                     {
                                                         "$building": {
                                                             "campus": "$campus",
@@ -356,12 +368,12 @@ class AddFragment : Fragment() {
                                                             }
                                                         }
                                                     }
-                                                """.trimIndent()
+                                                ]""".trimIndent().toRequestBody(mediaType)
 
-                                            val mediaType = "application/json".toMediaType()
                                             val request = Request.Builder()
                                                 .url(url)
-                                                .patch(jsonBody.toRequestBody(mediaType))
+                                                .patch(jsonBody)
+                                                .addHeader("Content-Type", "application/json")
                                                 .build()
 
                                             // Send the request and handle the response
@@ -500,43 +512,6 @@ class AddFragment : Fragment() {
                     TODO("Not yet implemented")
                 }
 
-                // private fun updateWasteData(data: JSONArray) {
-                //     GlobalScope.launch(Dispatchers.IO) {
-                //         try {
-                //             val client = OkHttpClient()
-                //             val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
-                //             val mediaType = "application/json".toMediaType()
-                //             val request = Request.Builder()
-                //                 .url(url)
-                //                 .patch(data.toString().toRequestBody(mediaType))
-                //                 .addHeader("Content-Type", "application/json")
-                //                 .build()
-                //             val response = client.newCall(request).execute()
-                //             if (response.isSuccessful) {
-                //                 withContext(Dispatchers.Main) {
-                //                     clearInputFields()
-                //                     Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
-                //                 }
-                //             } else {
-                //                 withContext(Dispatchers.Main) {
-                //                     Toast.makeText(requireContext(), "Error: ${response.code}", Toast.LENGTH_SHORT).show()
-                //                 }
-                //             }
-                //         } catch (e: Exception) {
-                //             withContext(Dispatchers.Main) {
-                //                 Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
-                //             }
-                //         } finally {
-                //             withContext(Dispatchers.Main) {
-                //                 binding.progressBar2.visibility = View.GONE
-                //                 binding.overlay.visibility = View.GONE
-                //                 binding.overlay.setOnTouchListener (null)
-                //             }
-                //         }
-                //     }
-                // }
-                              
-
                 private fun showErrorMessage(message: String) {
                     val builder = AlertDialog.Builder(requireContext())
                     builder.setTitle("Error")
@@ -595,6 +570,43 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+
+                // private fun updateWasteData(data: JSONArray) {
+                //     GlobalScope.launch(Dispatchers.IO) {
+                //         try {
+                //             val client = OkHttpClient()
+                //             val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
+                //             val mediaType = "application/json".toMediaType()
+                //             val request = Request.Builder()
+                //                 .url(url)
+                //                 .patch(data.toString().toRequestBody(mediaType))
+                //                 .addHeader("Content-Type", "application/json")
+                //                 .build()
+                //             val response = client.newCall(request).execute()
+                //             if (response.isSuccessful) {
+                //                 withContext(Dispatchers.Main) {
+                //                     clearInputFields()
+                //                     Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
+                //                 }
+                //             } else {
+                //                 withContext(Dispatchers.Main) {
+                //                     Toast.makeText(requireContext(), "Error: ${response.code}", Toast.LENGTH_SHORT).show()
+                //                 }
+                //             }
+                //         } catch (e: Exception) {
+                //             withContext(Dispatchers.Main) {
+                //                 Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
+                //             }
+                //         } finally {
+                //             withContext(Dispatchers.Main) {
+                //                 binding.progressBar2.visibility = View.GONE
+                //                 binding.overlay.visibility = View.GONE
+                //                 binding.overlay.setOnTouchListener (null)
+                //             }
+                //         }
+                //     }
+                // }
+                              
 
 
 //                                            val itemArray = JSONArray()
