@@ -26,6 +26,7 @@ import java.io.IOException
 @Suppress("NAME_SHADOWING")
 class AddFragment : Fragment() {
 
+    private var building_name: String? = null
     private var id: String? = null
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreateView(
@@ -85,8 +86,6 @@ class AddFragment : Fragment() {
 
                     val selectedLoc = parent?.getItemAtPosition(position).toString()
 
-                    val selectedBuilding = binding.buildingPickerInput.selectedItem.toString()
-
                     val buildingSelectorAlangilan = listOf(
                         "CEAFA Building",
                         "CIT Building",
@@ -122,18 +121,6 @@ class AddFragment : Fragment() {
                         "Student Services Center"
                     )
 
-                    val building_name = when (selectedBuilding) {
-                        "CEAFA Building" -> "CEAFA"
-                        "CIT Building" -> "CIT"
-                        "CICS Building" -> "CICS"
-                        "COE Building" -> "COE"
-                        "Gymnasium" -> "GYM"
-                        "STEER Hub" -> "STEER Hub"
-                        "Student Services Center" -> "SSC"
-                        else -> ""
-                    }
-
-
                     val adapterBuilding = ArrayAdapter(
                         requireContext(),
                         R.layout.spinner_selected_item2,
@@ -143,6 +130,30 @@ class AddFragment : Fragment() {
                     }
 
                     binding.buildingPickerInput.adapter = adapterBuilding
+                    
+                    binding.buildingPickerInput.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(
+                            parent: AdapterView<*>?,
+                            view: View?,
+                            position: Int,
+                            id: Long
+                        ) {
+
+                            val selectedBuilding = binding.buildingPickerInput.selectedItem.toString()
+                            building_name = when (selectedBuilding) {
+                                "CEAFA Building" -> "CEAFA"
+                                "CIT Building" -> "CIT"
+                                "CICS Building" -> "CICS"
+                                "COE Building" -> "COE"
+                                "Gymnasium" -> "Gym"
+                                "STEER Hub" -> "STEER Hub"
+                                "Student Services Center" -> "SSC"
+                                else -> ""
+                            }
+                        }
+            
+                        override fun onNothingSelected(parent: AdapterView<*>?) {}
+                    }
 
                     val campus_name = when (selectedLoc) {
                         "Batangas State University - Alangilan" -> "Alangilan"
@@ -247,14 +258,6 @@ class AddFragment : Fragment() {
 
                                             showLoading()
 
-                                            if (isAdded) {
-                                                requireActivity().runOnUiThread {
-                                                    binding.location.text = campus
-                                                    binding.building.text = building
-                                                    binding.amount.text = weight.toString()
-                                                }
-                                            }
-
                                             val client = OkHttpClient()
                                             val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
                                             val mediaType = "application/json".toMediaType()
@@ -282,7 +285,6 @@ class AddFragment : Fragment() {
                                             client.newCall(request).enqueue(object : Callback {
                                                 override fun onFailure(call: Call, e: IOException) {
                                                     // Handle the failure
-                                                    hideLoading()
                                                     Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
                                                 }
 
@@ -290,8 +292,8 @@ class AddFragment : Fragment() {
                                                     
                                                     if (response.isSuccessful) {
                                                         val responseBody = response.body?.string()
-                                                        clearInputFields()
                                                         requireActivity().runOnUiThread {
+                                                            clearInputFields()
                                                             Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     } else {
@@ -299,9 +301,9 @@ class AddFragment : Fragment() {
                                                             Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
-                                                    hideLoading()
                                                 }
                                             })
+                                            hideLoading()
 
                                         }
                                     }
@@ -339,7 +341,6 @@ class AddFragment : Fragment() {
 
                                         binding.inputButton.setOnClickListener {
 
-                                            val wastetype = "recyclable"
                                             val building = building_name
                                             val campus = campus_name
                                             val totalWeight = 0
@@ -363,16 +364,16 @@ class AddFragment : Fragment() {
                                                         "$building": {
                                                             "campus": "$campus",
                                                             "weight": {
-                                                                "$wastetype": $weight,
+                                                                "recyclable": $weight,
                                                                 "total": $totalWeight
                                                             }
                                                         }
                                                     }
-                                                ]""".trimIndent().toRequestBody(mediaType)
+                                                ]""".trimIndent()
 
                                             val request = Request.Builder()
                                                 .url(url)
-                                                .patch(jsonBody)
+                                                .patch(jsonBody.toRequestBody(mediaType))
                                                 .addHeader("Content-Type", "application/json")
                                                 .build()
 
@@ -380,7 +381,6 @@ class AddFragment : Fragment() {
                                             client.newCall(request).enqueue(object : Callback {
                                                 override fun onFailure(call: Call, e: IOException) {
                                                     // Handle the failure
-                                                    hideLoading()
                                                     Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
                                                 }
 
@@ -388,8 +388,8 @@ class AddFragment : Fragment() {
 
                                                     if (response.isSuccessful) {
                                                         val responseBody = response.body?.string()
-                                                        clearInputFields()
                                                         requireActivity().runOnUiThread {
+                                                            clearInputFields()
                                                             Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     } else {
@@ -397,9 +397,9 @@ class AddFragment : Fragment() {
                                                             Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
-                                                    hideLoading()
                                                 }
                                             })
+                                            hideLoading()
 
                                         }
 
@@ -437,7 +437,6 @@ class AddFragment : Fragment() {
 
                                         binding.inputButton.setOnClickListener {
 
-                                            val wastetype = "food_waste"
                                             val building = building_name
                                             val campus = campus_name
                                             val totalWeight = 0
@@ -453,30 +452,31 @@ class AddFragment : Fragment() {
 
                                             val client = OkHttpClient()
                                             val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
+                                            val mediaType = "application/json".toMediaType()
 
                                             val jsonBody = """
+                                               [
                                                     {
                                                         "$building": {
                                                             "campus": "$campus",
                                                             "weight": {
-                                                                "$wastetype": $weight,
+                                                                "food_waste": $weight,
                                                                 "total": $totalWeight
                                                             }
                                                         }
                                                     }
-                                                """.trimIndent()
+                                               ]""".trimIndent()
 
-                                            val mediaType = "application/json".toMediaType()
                                             val request = Request.Builder()
                                                 .url(url)
                                                 .patch(jsonBody.toRequestBody(mediaType))
+                                                .addHeader("Content-Type", "application/json")
                                                 .build()
 
                                             // Send the request and handle the response
                                             client.newCall(request).enqueue(object : Callback {
                                                 override fun onFailure(call: Call, e: IOException) {
                                                     // Handle the failure
-                                                    hideLoading()
                                                     Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
                                                 }
 
@@ -484,8 +484,8 @@ class AddFragment : Fragment() {
 
                                                     if (response.isSuccessful) {
                                                         val responseBody = response.body?.string()
-                                                        clearInputFields()
                                                         requireActivity().runOnUiThread {
+                                                            clearInputFields()
                                                             Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     } else {
@@ -493,9 +493,9 @@ class AddFragment : Fragment() {
                                                             Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
-                                                    hideLoading()
                                                 }
                                             })
+                                            hideLoading()
 
                                         }
                                     }
