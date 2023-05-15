@@ -101,16 +101,46 @@ class HomeFragment : Fragment() {
                         }
                         if (buildingObject != null) {
                             val weightObject = buildingObject.getJSONObject("weight")
-                            val residualWasteWeight = weightObject.getInt("residual")
-                            val foodWasteWeight = weightObject.getInt("food_waste")
-                            val recyclableWasteWeight = weightObject.getInt("recyclable")
+                            val residualWasteWeight: Int? = try {
+                                weightObject.getInt("residual")
+                            } catch (e: JSONException) {
+                                null
+                            }
+                            val foodWasteWeight: Int? = try {
+                                weightObject.getInt("food_waste")
+                            } catch (e: JSONException) {
+                                null
+                            }
+                            val recyclableWasteWeight: Int? = try {
+                                weightObject.getInt("recyclable")
+                            } catch (e: JSONException) {
+                                null
+                            }
 
                             if (isAdded) {
                                 requireActivity().runOnUiThread {
-                                    binding.displayfood.text = foodWasteWeight.toString()
-                                    binding.displayres.text = residualWasteWeight.toString()
-                                    binding.displayrec.text = recyclableWasteWeight.toString()
+                                    if (residualWasteWeight == null) {
+                                        binding.displayres.text = "0"
+                                    } else {
+                                        binding.displayres.text = residualWasteWeight.toString()
+                                    }
+                                    if (foodWasteWeight == null) {
+                                        binding.displayfood.text = "0"
+                                    } else {
+                                        binding.displayfood.text = foodWasteWeight.toString()
+                                    }
+                                    if (recyclableWasteWeight == null) {
+                                        binding.displayrec.text = "0"
+                                    } else {
+                                        binding.displayrec.text = recyclableWasteWeight.toString()
+                                    }
                                 }
+                            }
+                        }else{
+                            requireActivity().runOnUiThread {
+                                binding.displayres.text = "0"
+                                binding.displayfood.text = "0"
+                                binding.displayrec.text = "0"
                             }
                         }
                     }

@@ -27,6 +27,7 @@ import java.io.IOException
 class AddFragment : Fragment() {
 
     private var building_name: String? = null
+    private var selectedName: String? = null
     private var id: String? = null
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreateView(
@@ -210,6 +211,36 @@ class AddFragment : Fragment() {
                                 position: Int,
                                 id: Long
                             ) {
+                                val recyclableName = listOf(
+                                    "Bottles",
+                                    "Paper",
+                                    "Karton"
+                                )
+                                val adapterName = ArrayAdapter(
+                                    requireContext(),
+                                    R.layout.spinner_selected_item2,
+                                    recyclableName
+                                ).apply {
+                                    setDropDownViewResource(R.layout.style_spinner)
+                                }
+
+                                binding.namePickerInput.adapter = adapterName
+
+                                binding.namePickerInput.onItemSelectedListener =
+                                    object : AdapterView.OnItemSelectedListener {
+                                        override fun onItemSelected(
+                                            parent: AdapterView<*>?,
+                                            view: View?,
+                                            position: Int,
+                                            id: Long
+                                        ) {
+                                            selectedName = parent?.getItemAtPosition(position).toString()
+                                        }
+                                        override fun onNothingSelected(parent: AdapterView<*>?) {
+                                            // do nothing
+                                        }
+                                    }
+
                                 val selectedItem = parent?.getItemAtPosition(position).toString()
                                 when (selectedItem) {
                                     "Residual Waste" -> {
@@ -256,24 +287,22 @@ class AddFragment : Fragment() {
                                                 return@setOnClickListener
                                             }
 
-                                            showLoading()
+                                            binding.progressBar2.visibility = View.VISIBLE
 
                                             val client = OkHttpClient()
-                                            val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
+                                            val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id"
                                             val mediaType = "application/json".toMediaType()
 
                                             val jsonBody = """
-                                                [
-                                                    {
-                                                        "$building": {
-                                                            "campus": "$campus",
-                                                            "weight": {
-                                                                "residual": $weight,
-                                                                "total": $totalWeight
-                                                            }
+                                                {
+                                                    "$building": {
+                                                        "campus": "$campus",
+                                                        "weight": {
+                                                            "residual": $weight,
+                                                            "total": $totalWeight
                                                         }
                                                     }
-                                                ]""".trimIndent()
+                                                }""".trimIndent()
 
                                             val request = Request.Builder()
                                                 .url(url)
@@ -290,26 +319,26 @@ class AddFragment : Fragment() {
 
                                                 override fun onResponse(call: Call, response: Response) {
                                                     
-                                                    if (response.isSuccessful) {
-                                                        val responseBody = response.body?.string()
+                                                    val responseBody = response.body?.string()
+                                                    if (response.isSuccessful && responseBody != null) {
                                                         requireActivity().runOnUiThread {
                                                             clearInputFields()
+                                                            binding.progressBar2.visibility = View.GONE
                                                             Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     } else {
                                                         requireActivity().runOnUiThread {
+                                                            binding.progressBar2.visibility = View.GONE
                                                             Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
                                                 }
                                             })
-                                            hideLoading()
-
                                         }
                                     }
                                     "Recyclable Waste" -> {
                                         binding.wasteQuantity.visibility = View.GONE
-                                        binding.nameOfWaste.visibility = View.GONE
+                                        binding.nameOfWaste.visibility = View.VISIBLE
                                         binding.amountOfWaste.visibility = View.VISIBLE
 
                                         binding.inputButton.isEnabled = false // Disable the button initially
@@ -318,7 +347,6 @@ class AddFragment : Fragment() {
                                         val textWatcher = object : TextWatcher {
                                             override fun afterTextChanged(s: Editable?) {
                                                 // Check if all EditText fields have non-empty values
-//                                                val name = binding.nameEditText.text.toString().trim()
                                                 val amount = binding.amountEditText.text.toString().trim()
 //                                                name.isNotEmpty() &&
                                                 val allFieldsFilled = amount.isNotEmpty()
@@ -336,7 +364,6 @@ class AddFragment : Fragment() {
                                             }
                                         }
 
-                                        binding.nameEditText.addTextChangedListener(textWatcher)
                                         binding.amountEditText.addTextChangedListener(textWatcher)
 
                                         binding.inputButton.setOnClickListener {
@@ -352,24 +379,22 @@ class AddFragment : Fragment() {
                                                 return@setOnClickListener
                                             }
 
-                                            showLoading()
+                                            binding.progressBar2.visibility = View.VISIBLE
 
                                             val client = OkHttpClient()
-                                            val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
+                                            val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id"
                                             val mediaType = "application/json".toMediaType()
 
                                             val jsonBody = """
-                                                [
-                                                    {
-                                                        "$building": {
-                                                            "campus": "$campus",
-                                                            "weight": {
-                                                                "recyclable": $weight,
-                                                                "total": $totalWeight
-                                                            }
+                                                {
+                                                    "$building": {
+                                                        "campus": "$campus",
+                                                        "weight": {
+                                                            "recyclable": $weight,
+                                                            "total": $totalWeight
                                                         }
                                                     }
-                                                ]""".trimIndent()
+                                                }""".trimIndent()
 
                                             val request = Request.Builder()
                                                 .url(url)
@@ -386,21 +411,21 @@ class AddFragment : Fragment() {
 
                                                 override fun onResponse(call: Call, response: Response) {
 
-                                                    if (response.isSuccessful) {
-                                                        val responseBody = response.body?.string()
+                                                    val responseBody = response.body?.string()
+                                                    if (response.isSuccessful && responseBody != null) {
                                                         requireActivity().runOnUiThread {
                                                             clearInputFields()
+                                                            binding.progressBar2.visibility = View.GONE
                                                             Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     } else {
                                                         requireActivity().runOnUiThread {
+                                                            binding.progressBar2.visibility = View.GONE
                                                             Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
                                                 }
                                             })
-                                            hideLoading()
-
                                         }
 
 
@@ -448,24 +473,22 @@ class AddFragment : Fragment() {
                                                 return@setOnClickListener
                                             }
 
-                                            showLoading()
+                                            binding.progressBar2.visibility = View.VISIBLE
 
                                             val client = OkHttpClient()
-                                            val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
+                                            val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id"
                                             val mediaType = "application/json".toMediaType()
 
                                             val jsonBody = """
-                                               [
-                                                    {
-                                                        "$building": {
-                                                            "campus": "$campus",
-                                                            "weight": {
-                                                                "food_waste": $weight,
-                                                                "total": $totalWeight
-                                                            }
+                                                {
+                                                    "$building": {
+                                                        "campus": "$campus",
+                                                        "weight": {
+                                                            "food_waste": $weight,
+                                                            "total": $totalWeight
                                                         }
                                                     }
-                                               ]""".trimIndent()
+                                                }""".trimIndent()
 
                                             val request = Request.Builder()
                                                 .url(url)
@@ -482,21 +505,21 @@ class AddFragment : Fragment() {
 
                                                 override fun onResponse(call: Call, response: Response) {
 
-                                                    if (response.isSuccessful) {
-                                                        val responseBody = response.body?.string()
+                                                    val responseBody = response.body?.string()
+                                                    if (response.isSuccessful && responseBody != null) {
                                                         requireActivity().runOnUiThread {
                                                             clearInputFields()
+                                                            binding.progressBar2.visibility = View.GONE
                                                             Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     } else {
                                                         requireActivity().runOnUiThread {
+                                                            binding.progressBar2.visibility = View.GONE
                                                             Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
                                                 }
                                             })
-                                            hideLoading()
-
                                         }
                                     }
                                 }
@@ -524,25 +547,8 @@ class AddFragment : Fragment() {
                 }
 
                 private fun clearInputFields() {
-                    binding.nameEditText.setText("")
                     binding.quantityEditText.setText("")
                     binding.amountEditText.setText("")
-                }
-                
-                private fun showLoading(){
-                    requireActivity().runOnUiThread {
-                        binding.progressBar2.visibility = View.VISIBLE
-                        binding.overlay.visibility = View.VISIBLE
-                        binding.overlay.setOnTouchListener { _, _ -> true}
-                    }
-                }
-                
-                private fun hideLoading(){
-                    requireActivity().runOnUiThread {
-                        binding.progressBar2.visibility = View.GONE
-                        binding.overlay.visibility = View.GONE
-                        binding.overlay.setOnTouchListener (null)
-                    }
                 }
                 
             }
