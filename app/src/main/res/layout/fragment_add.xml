@@ -176,6 +176,8 @@
                 android:id="@+id/amountEditText"
                 android:layout_width="190dp"
                 android:layout_height="40dp"
+                android:textColorHint="?attr/colorSecondaryVariant"
+                android:hint="kg"
                 android:inputType="numberDecimal"
                 android:background="@drawable/add_input_background"
                 android:padding="5dp"
