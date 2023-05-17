@@ -200,7 +200,7 @@
                 android:layout_height="wrap_content"
                 android:text="0"
                 android:id="@+id/displayres"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textAlignment="center"
                 android:textColor="?attr/colorOnPrimary"
                 tools:ignore="RtlCompat" />
@@ -233,7 +233,7 @@
                 android:layout_height="wrap_content"
                 android:text="0"
                 android:id="@+id/displayrec"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textAlignment="center"
                 android:textColor="?attr/colorOnPrimary"
                 tools:ignore="RtlCompat" />

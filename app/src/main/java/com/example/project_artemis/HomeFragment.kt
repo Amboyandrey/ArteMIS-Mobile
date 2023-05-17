@@ -5,9 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Spinner
+import android.widget.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.*
@@ -22,6 +20,7 @@ class HomeFragment : Fragment() {
     private var buildingObject: String? = null
     private lateinit var itemsBuilding: List<String>
     private lateinit var itemsTime: List<String>
+    private var todayId: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -29,6 +28,26 @@ class HomeFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val binding = FragmentHomeBinding.inflate(inflater, container, false)
+
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Toast.makeText(requireContext(), "Request unsuccessful", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val responseString = response.body?.string()
+                val jsonArray = JSONArray(responseString)
+                val jsonObject = jsonArray.getJSONObject(0)
+                todayId = jsonObject.getString("id")
+            }
+
+        })
+
 
         itemsTime = listOf("24hr", "7d", "1m", "1y", "2y", "3y", "4y", "5y", "All Time")
         itemsBuilding = listOf(
@@ -80,12 +99,14 @@ class HomeFragment : Fragment() {
                     else -> ""
                 }
 
-                val client = OkHttpClient()
-                val request = Request.Builder()
-                    .url("https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest")
+                val client2 = OkHttpClient()
+                val id = todayId
+                val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id"
+                val request2 = Request.Builder()
+                    .url(url)
                     .build()
 
-                client.newCall(request).enqueue(object : Callback {
+                client2.newCall(request2).enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         // Handle network errors here
                     }
@@ -101,18 +122,18 @@ class HomeFragment : Fragment() {
                         }
                         if (buildingObject != null) {
                             val weightObject = buildingObject.getJSONObject("weight")
-                            val residualWasteWeight: Int? = try {
-                                weightObject.getInt("residual")
+                            val residualWasteWeight: Double? = try {
+                                weightObject.getDouble("residual")
                             } catch (e: JSONException) {
                                 null
                             }
-                            val foodWasteWeight: Int? = try {
-                                weightObject.getInt("food_waste")
+                            val foodWasteWeight: Double? = try {
+                                weightObject.getDouble("food_waste")
                             } catch (e: JSONException) {
                                 null
                             }
-                            val recyclableWasteWeight: Int? = try {
-                                weightObject.getInt("recyclable")
+                            val recyclableWasteWeight: Double? = try {
+                                weightObject.getDouble("recyclable")
                             } catch (e: JSONException) {
                                 null
                             }
@@ -137,10 +158,12 @@ class HomeFragment : Fragment() {
                                 }
                             }
                         }else{
-                            requireActivity().runOnUiThread {
-                                binding.displayres.text = "0"
-                                binding.displayfood.text = "0"
-                                binding.displayrec.text = "0"
+                            if (this@HomeFragment.isAdded) {
+                                requireActivity().runOnUiThread {
+                                    binding.displayres.text = "0"
+                                    binding.displayfood.text = "0"
+                                    binding.displayrec.text = "0"
+                                }
                             }
                         }
                     }
@@ -156,9 +179,13 @@ class HomeFragment : Fragment() {
         if (name != null) {
             val words = name.split("\\s+".toRegex())
             if (words.size > 1) {
-                binding.name.text = words[0]
+                requireActivity().runOnUiThread {
+                    binding.name.text = words[0]
+                }
             } else {
-                binding.name.text = name
+                requireActivity().runOnUiThread {
+                    binding.name.text = name
+                }
             }
         }
 

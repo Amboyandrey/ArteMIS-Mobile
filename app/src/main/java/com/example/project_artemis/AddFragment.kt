@@ -1,7 +1,6 @@
 package com.example.project_artemis
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -24,15 +23,15 @@ import org.json.JSONObject
 import okhttp3.*
 import java.io.IOException
 import kotlinx.coroutines.launch
-
-
+import okhttp3.logging.HttpLoggingInterceptor
 @Suppress("NAME_SHADOWING")
 class AddFragment : Fragment() {
 
     private var buildingName: String? = null
     private var campusName: String? = null
     private var selectedName: String? = null
-    private var id: String? = null
+    private var todayId: String? = null
+
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,7 +53,8 @@ class AddFragment : Fragment() {
                 val responseString = response.body?.string()
                 val jsonArray = JSONArray(responseString)
                 val jsonObject = jsonArray.getJSONObject(0)
-                this@AddFragment.id = jsonObject.getString("id")
+                todayId = jsonObject.getString("id")
+                val id = todayId
                 if (isAdded) {
                     requireActivity().runOnUiThread {
                         Toast.makeText(requireContext(), "Retrieved id: $id", Toast.LENGTH_SHORT).show()
@@ -279,10 +279,10 @@ class AddFragment : Fragment() {
 
                                         binding.inputButton.setOnClickListener {
 
-                                            // val wastetype = "residual"
                                             val building = buildingName
                                             val campus = campusName
                                             val totalWeight = 0
+                                            val id = todayId
                                             val weight = binding.amountEditText.text.toString().trim().toDouble()
 
                                             // Check if any EditText field is empty before proceeding
@@ -301,8 +301,6 @@ class AddFragment : Fragment() {
                                                 put("$building", JSONObject().apply {
                                                     put("weight", JSONObject().apply {
                                                         put("residual", weight) // new value for residual
-                                                        put("recyclable", weight)
-                                                        put("food_waste", weight)
                                                         put("total", totalWeight) // new value for total
                                                     })
                                                     put("campus", "$campus")
@@ -321,7 +319,7 @@ class AddFragment : Fragment() {
                                             lifecycleScope.launch(Dispatchers.IO) {
                                                 try {
                                                     // execute the request and get the response
-                                                    val response = OkHttpClient().newCall(request).execute()
+                                                    val response = client.newCall(request).execute()
                                                     val responseBody = response.body?.string()
 
                                                     withContext(Dispatchers.Main) {
@@ -342,127 +340,7 @@ class AddFragment : Fragment() {
                                                      }
                                                  }
                                             }
-
-                                            // val client = OkHttpClient()
-                                            // val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id"
-                                            // val mediaType = "application/json".toMediaType()
-
-                                            // val jsonBody = """
-                                            //     {
-                                            //         "$building": {
-                                            //             "campus": "$campus",
-                                            //             "weight": {
-                                            //                 "residual": $weight,
-                                            //                 "total": $totalWeight
-                                            //             }
-                                            //         }
-                                            //     }""".trimIndent()
-
-                                            // val request = Request.Builder()
-                                            //     .url(url)
-                                            //     .patch(jsonBody.toRequestBody(mediaType))
-                                            //     .addHeader("Content-Type", "application/json")
-                                            //     .build()
-
-                                            // // Send the request and handle the response
-                                            // client.newCall(request).enqueue(object : Callback {
-                                            //     override fun onFailure(call: Call, e: IOException) {
-                                            //         // Handle the failure
-                                            //         Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
-                                            //     }
-
-                                            //     override fun onResponse(call: Call, response: Response) {
-                                                    
-                                            //         val responseBody = response.body?.string()
-                                            //         if (response.isSuccessful && responseBody != null) {
-                                            //             requireActivity().runOnUiThread {
-                                            //                 clearInputFields()
-                                            //                 binding.progressBar2.visibility = View.GONE
-                                            //                 Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
-                                            //             }
-                                            //         } else {
-                                            //             requireActivity().runOnUiThread {
-                                            //                 binding.progressBar2.visibility = View.GONE
-                                            //                 Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
-                                            //             }
-                                            //         }
-                                            //     }
-                                            // })
                                         }
-
-                                        // binding.inputButton.setOnClickListener {
-
-                                        //     // val wastetype = "residual"
-                                        //     val building = building_name
-                                        //     val campus = campus_name
-                                        //     val totalWeight = 0
-                                        //     val weight = binding.amountEditText.text.toString().trim().toDouble()
-                                        
-                                        //     // Check if any EditText field is empty before proceeding
-                                        //     if (weight == 0) {
-                                        //         showErrorMessage("Please enter the required data")
-                                        //         return@setOnClickListener
-                                        //     }
-                                        
-                                        //     binding.progressBar2.visibility = View.VISIBLE
-                                        
-                                        //     val retrofit = Retrofit.Builder()
-                                        //         .baseUrl("https://us-central1-artemis-b18ae.cloudfunctions.net/server/")
-                                        //         .addConverterFactory(GsonConverterFactory.create())
-                                        //         .build()
-                                        
-                                        //     interface ApiService {
-
-                                        //         @Headers("Content-Type: application/json")
-                                        //         @PATCH("waste/{id}")
-                                        //         fun updateWaste(@Path("id") id: String, @Body requestBody: RequestBodyWrapper): Call<Void>
-                                            
-                                        //     }
-                                            
-                                        //     data class RequestBodyWrapper(
-                                        //         val building: Building
-                                        //     )
-                                            
-                                        //     data class Building(
-                                        //         val campus: String,
-                                        //         val weight: Weight
-                                        //     )
-                                            
-                                        //     data class Weight(
-                                        //         @SerializedName("residual")
-                                        //         val residual: Int,
-                                        //         val total: Int
-                                        //     )
-
-                                        //     val service = retrofit.create(ApiService::class.java)
-                                        
-                                        //     val requestBody = RequestBodyWrapper(
-                                        //         building = Building(campus, Weight(residual = weight, total = totalWeight))
-                                        //     )
-                                        
-                                        //     service.updateWaste(id, requestBody).enqueue(object : Callback<Void> {
-                                        //         override fun onFailure(call: Call<Void>, t: Throwable) {
-                                        //             // Handle the failure
-                                        //             Toast.makeText(requireContext(), "An error occurred: ${t.message}", Toast.LENGTH_SHORT).show()
-                                        //         }
-                                        
-                                        //         override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                                        //             if (response.isSuccessful) {
-                                        //                 requireActivity().runOnUiThread {
-                                        //                     clearInputFields()
-                                        //                     binding.progressBar2.visibility = View.GONE
-                                        //                     Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
-                                        //                 }
-                                        //             } else {
-                                        //                 requireActivity().runOnUiThread {
-                                        //                     binding.progressBar2.visibility = View.GONE
-                                        //                     Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
-                                        //                 }
-                                        //             }
-                                        //         }
-                                        //     })
-                                        // }
-
                                     }
                                     "Recyclable Waste" -> {
                                         binding.wasteQuantity.visibility = View.GONE
@@ -476,7 +354,7 @@ class AddFragment : Fragment() {
                                             override fun afterTextChanged(s: Editable?) {
                                                 // Check if all EditText fields have non-empty values
                                                 val amount = binding.amountEditText.text.toString().trim()
-//                                                name.isNotEmpty() &&
+                                                // name.isNotEmpty() &&
                                                 val allFieldsFilled = amount.isNotEmpty()
 
                                                 // Enable/disable the button based on the result of the check
@@ -499,6 +377,7 @@ class AddFragment : Fragment() {
                                             val building = buildingName
                                             val campus = campusName
                                             val totalWeight = 0
+                                            val id = todayId
                                             val weight = binding.amountEditText.text.toString().trim().toDouble()
 
                                             // Check if any EditText field is empty before proceeding
@@ -509,32 +388,41 @@ class AddFragment : Fragment() {
 
                                             binding.progressBar2.visibility = View.VISIBLE
 
-                                            val client = OkHttpClient()
+                                            val interceptor = HttpLoggingInterceptor()
+                                            interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+                                            val client = OkHttpClient.Builder()
+                                                .addInterceptor(interceptor)
+                                                .build()
+
                                             val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id"
-                                            val mediaType = "application/json".toMediaType()
 
-                                            val jsonBody = """
-                                                {
-                                                    "$building": {
-                                                        "campus": "$campus",
-                                                        "weight": {
-                                                            "recyclable": $weight,
-                                                            "total": $totalWeight
-                                                        }
-                                                    }
-                                                }""".trimIndent()
+                                            val jsonBody = JSONObject().apply {
+                                                put("$building", JSONObject().apply {
+                                                    put("weight", JSONObject().apply {
+                                                        put("recyclable", weight) // new value for recyclable
+                                                        put("total", totalWeight) // new value for total
+                                                    })
+                                                    put("campus", "$campus")
+                                                })
+                                            }
 
+                                            val requestBody = jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
                                             val request = Request.Builder()
                                                 .url(url)
-                                                .patch(jsonBody.toRequestBody(mediaType))
+                                                .patch(requestBody)
                                                 .addHeader("Content-Type", "application/json")
                                                 .build()
 
-                                            // Send the request and handle the response
+                                             // Send the request and handle the response
                                             client.newCall(request).enqueue(object : Callback {
                                                 override fun onFailure(call: Call, e: IOException) {
                                                     // Handle the failure
-                                                    Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(
+                                                        requireContext(),
+                                                        "An error occurred: ${e.message}",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 }
 
                                                 override fun onResponse(call: Call, response: Response) {
@@ -544,18 +432,25 @@ class AddFragment : Fragment() {
                                                         requireActivity().runOnUiThread {
                                                             clearInputFields()
                                                             binding.progressBar2.visibility = View.GONE
-                                                            Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
+                                                            Toast.makeText(
+                                                                requireContext(),
+                                                                "Input Successful: ${response.code}",
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
                                                         }
                                                     } else {
                                                         requireActivity().runOnUiThread {
                                                             binding.progressBar2.visibility = View.GONE
-                                                            Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
+                                                            Toast.makeText(
+                                                                requireContext(),
+                                                                "Input Unsuccessful: ${response.code}",
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
                                                         }
                                                     }
                                                 }
                                             })
                                         }
-
 
                                     }
                                     "Food Waste" -> {
@@ -593,6 +488,7 @@ class AddFragment : Fragment() {
                                             val building = buildingName
                                             val campus = campusName
                                             val totalWeight = 0
+                                            val id = todayId
                                             val weight = binding.amountEditText.text.toString().trim().toDouble()
 
                                             // Check if any EditText field is empty before proceeding
@@ -603,32 +499,75 @@ class AddFragment : Fragment() {
 
                                             binding.progressBar2.visibility = View.VISIBLE
 
-                                            val client = OkHttpClient()
+                                            val interceptor = HttpLoggingInterceptor()
+                                            interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+                                            val client = OkHttpClient.Builder()
+                                                .addInterceptor(interceptor)
+                                                .build()
+
                                             val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id"
-                                            val mediaType = "application/json".toMediaType()
 
-                                            val jsonBody = """
-                                                {
-                                                    "$building": {
-                                                        "campus": "$campus",
-                                                        "weight": {
-                                                            "food_waste": $weight,
-                                                            "total": $totalWeight
-                                                        }
-                                                    }
-                                                }""".trimIndent()
+                                            // create a JSON object with the new values to be patched
+                                            val jsonObject = JSONObject().apply {
+                                                put("$building", JSONObject().apply {
+                                                    put("weight", JSONObject().apply {
+                                                        put("food_waste", weight) // new value for foodwaste
+                                                        put("total", totalWeight) // new value for total
+                                                    })
+                                                    put("campus", "$campus")
+                                                })
+                                            }
 
+
+                                            // // create a PATCH request to the API endpoint with the updated data
+                                            // val requestBody = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+                                            // val request = Request.Builder()
+                                            //     .url("https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id")
+                                            //     .patch(requestBody)
+                                            //     .addHeader("Content-Type", "application/json; charset=utf-8")
+                                            //     .build()
+
+                                            // // perform the network operation on a separate thread using Coroutines
+                                            // lifecycleScope.launch(Dispatchers.IO) {
+                                            //     try {
+                                            //         // execute the request and get the response
+                                            //         val response = OkHttpClient().newCall(request).execute()
+                                            //         val responseBody = response.body?.string()
+
+                                            //         withContext(Dispatchers.Main) {
+                                            //             if (response.isSuccessful && responseBody != null) {
+                                            //                 clearInputFields()
+                                            //                 Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
+                                            //             } else {
+                                            //                 Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
+                                            //             }
+                                            //         }
+                                            //     } catch (e: Exception) {
+                                            //         withContext(Dispatchers.Main) {
+                                            //             Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            //         }
+                                            //     } finally {
+                                            //         withContext(Dispatchers.Main) {
+                                            //             binding.progressBar2.visibility = View.GONE
+                                            //         }
+                                            //     }
+                                            // }
+
+                                            val requestBody = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
                                             val request = Request.Builder()
                                                 .url(url)
-                                                .patch(jsonBody.toRequestBody(mediaType))
+                                                .patch(requestBody)
                                                 .addHeader("Content-Type", "application/json")
                                                 .build()
 
-                                            // Send the request and handle the response
+                                             // Send the request and handle the response
                                             client.newCall(request).enqueue(object : Callback {
                                                 override fun onFailure(call: Call, e: IOException) {
                                                     // Handle the failure
-                                                    Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(
+                                                        requireContext(),"An error occurred: ${e.message}",Toast.LENGTH_SHORT
+                                                    ).show()
                                                 }
 
                                                 override fun onResponse(call: Call, response: Response) {
@@ -638,16 +577,21 @@ class AddFragment : Fragment() {
                                                         requireActivity().runOnUiThread {
                                                             clearInputFields()
                                                             binding.progressBar2.visibility = View.GONE
-                                                            Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
+                                                            Toast.makeText(
+                                                                requireContext(),"Input Successful: ${response.code}",Toast.LENGTH_SHORT
+                                                            ).show()
                                                         }
                                                     } else {
                                                         requireActivity().runOnUiThread {
                                                             binding.progressBar2.visibility = View.GONE
-                                                            Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
+                                                            Toast.makeText(
+                                                                requireContext(),"Input Unsuccessful: ${response.code}",Toast.LENGTH_SHORT
+                                                            ).show()
                                                         }
                                                     }
                                                 }
                                             })
+
                                         }
                                     }
                                 }
@@ -703,6 +647,145 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+
+
+                                            // val client = OkHttpClient()
+                                            // val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id"
+                                            // val mediaType = "application/json".toMediaType()
+
+                                            // val jsonBody = """
+                                            //     {
+                                            //         "$building": {
+                                            //             "campus": "$campus",
+                                            //             "weight": {
+                                            //                 "residual": $weight,
+                                            //                 "total": $totalWeight
+                                            //             }
+                                            //         }
+                                            //     }""".trimIndent()
+
+                                            // val request = Request.Builder()
+                                            //     .url(url)
+                                            //     .patch(jsonBody.toRequestBody(mediaType))
+                                            //     .addHeader("Content-Type", "application/json")
+                                            //     .build()
+
+                                            // // Send the request and handle the response
+                                            // client.newCall(request).enqueue(object : Callback {
+                                            //     override fun onFailure(call: Call, e: IOException) {
+                                            //         // Handle the failure
+                                            //         Toast.makeText(requireContext(), "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            //     }
+
+                                            //     override fun onResponse(call: Call, response: Response) {
+                                                    
+                                            //         val responseBody = response.body?.string()
+                                            //         if (response.isSuccessful && responseBody != null) {
+                                            //             requireActivity().runOnUiThread {
+                                            //                 clearInputFields()
+                                            //                 binding.progressBar2.visibility = View.GONE
+                                            //                 Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
+                                            //             }
+                                            //         } else {
+                                            //             requireActivity().runOnUiThread {
+                                            //                 binding.progressBar2.visibility = View.GONE
+                                            //                 Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
+                                            //             }
+                                            //         }
+                                            //     }
+                                            // })
+                                
+
+
+
+
+
+
+//                                            // create an instance of OkHttpClient
+//                                            val client = OkHttpClient()
+//
+//                                            // create a JSON object with the new values to be patched
+//                                            val jsonObject = JSONObject().apply {
+//                                                put("$building", JSONObject().apply {
+//                                                    put("weight", JSONObject().apply {
+//                                                        put("recyclable", weight) // new value for recyclable
+//                                                        put("total", totalWeight) // new value for total
+//                                                    })
+//                                                    put("campus", "$campus")
+//                                                })
+//                                            }
+//
+//                                            // create a PATCH request to the API endpoint with the updated data
+//                                            val requestBody = jsonObject.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+//                                            val request = Request.Builder()
+//                                                .url("https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id")
+//                                                .patch(requestBody)
+//                                                .addHeader("Content-Type", "application/json; charset=utf-8")
+//                                                .build()
+//
+//                                            // perform the network operation on a separate thread using Coroutines
+//                                            lifecycleScope.launch(Dispatchers.IO) {
+//                                                try {
+//                                                    // execute the request and get the response
+//                                                    val response = OkHttpClient().newCall(request).execute()
+//                                                    val responseBody = response.body?.string()
+//
+//                                                    withContext(Dispatchers.Main) {
+//                                                        if (response.isSuccessful && responseBody != null) {
+//                                                            clearInputFields()
+//                                                            Toast.makeText(requireContext(), "Input Successful: ${response.code}", Toast.LENGTH_SHORT).show()
+//                                                        } else {
+//                                                            Toast.makeText(requireContext(), "Input Unsuccessful: ${response.code}", Toast.LENGTH_SHORT).show()
+//                                                        }
+//                                                    }
+//                                                } catch (e: Exception) {
+//                                                    withContext(Dispatchers.Main) {
+//                                                        Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+//                                                    }
+//                                                } finally {
+//                                                     withContext(Dispatchers.Main) {
+//                                                         binding.progressBar2.visibility = View.GONE
+//                                                     }
+//                                                 }
+//                                            }
+
+
+
+
+
+
+
+
+//                                        binding.inputButton.setOnClickListener {
+//
+//                                            val building = buildingName
+//                                            val campus = campusName
+//                                            val totalWeight = 0
+//                                            val weight = binding.amountEditText.text.toString().trim().toDouble()
+//
+//                                            // Check if any EditText field is empty before proceeding
+//                                            if (weight.toInt() == 0) {
+//                                                showErrorMessage("Please enter the required data")
+//                                                return@setOnClickListener
+//                                            }
+//
+//                                            binding.progressBar2.visibility = View.VISIBLE
+//
+//                                            val interceptor = HttpLoggingInterceptor()
+//                                            interceptor.level = HttpLoggingInterceptor.Level.BODY
+//
+//                                            val okHttpClient = OkHttpClient.Builder()
+//                                                .addInterceptor(interceptor)
+//                                                // Add any other required configurations
+//                                                .build()
+//
+//                                        }
+
+
+
+
+
 
 
                 // private fun updateWasteData(data: JSONArray) {
