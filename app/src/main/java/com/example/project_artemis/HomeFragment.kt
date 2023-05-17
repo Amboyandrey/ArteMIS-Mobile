@@ -20,7 +20,6 @@ class HomeFragment : Fragment() {
     private var buildingObject: String? = null
     private lateinit var itemsBuilding: List<String>
     private lateinit var itemsTime: List<String>
-    private var todayId: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -28,26 +27,6 @@ class HomeFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val binding = FragmentHomeBinding.inflate(inflater, container, false)
-
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url("https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest")
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Toast.makeText(requireContext(), "Request unsuccessful", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                val responseString = response.body?.string()
-                val jsonArray = JSONArray(responseString)
-                val jsonObject = jsonArray.getJSONObject(0)
-                todayId = jsonObject.getString("id")
-            }
-
-        })
-
 
         itemsTime = listOf("24hr", "7d", "1m", "1y", "2y", "3y", "4y", "5y", "All Time")
         itemsBuilding = listOf(
@@ -100,8 +79,7 @@ class HomeFragment : Fragment() {
                 }
 
                 val client2 = OkHttpClient()
-                val id = todayId
-                val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/$id"
+                val url = "https://us-central1-artemis-b18ae.cloudfunctions.net/server/waste/latest"
                 val request2 = Request.Builder()
                     .url(url)
                     .build()
